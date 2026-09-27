@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#121416">
+<title>Winter Arc</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23121416'/><text x='50' y='68' font-family='Georgia,serif' font-size='58' font-weight='700' fill='%23EDEDEC' text-anchor='middle'>W</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ===== CONFIG lives in the <script> below (API_URL) ===== */
+:root{
+  --bg:#121416; --deep:#0B0C0D; --surface:#1A1D20; --surface2:#202327; --line:#2B2F33; --line-strong:#3A3F44;
+  --ink:#EDEDEC; --muted:#8D9297; --accent:#6C93AC; --good:#7FA07E; --warn:#BE7F44; --bad:#B4614B;
+  --r-md:3px; --r-sm:2px;
+  --display:'Big Shoulders Display','Arial Narrow',sans-serif;
+  --body:'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--bg);
+  color:var(--ink); font-family:var(--body); font-size:16px; line-height:1.5;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:calc(76px + env(safe-area-inset-bottom,0px));
+  -webkit-font-smoothing:antialiased; min-height:100%;
+}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
+.hidden{display:none!important}
+.wrap{max-width:1040px;margin:0 auto;padding:22px 20px 44px}
+
+/* ===== Auth ===== */
+.auth{min-height:100vh;display:grid;place-items:center;padding:24px}
+.auth-card{width:100%;max-width:360px}
+.auth h1{font-family:var(--display);font-weight:700;font-size:clamp(44px,12vw,60px);line-height:.9;letter-spacing:-.01em;margin-bottom:6px;text-transform:uppercase}
+.auth p.sub{color:var(--muted);margin-bottom:30px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.field{display:block;margin-bottom:16px}
+.field span{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+.field input{width:100%;background:transparent;border:1px solid var(--line);border-radius:var(--r-md);padding:12px 13px;font-size:16px}
+.field input:focus{border-color:var(--accent);outline:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--ink);color:var(--deep);font-weight:600;border-radius:var(--r-md);padding:13px 18px;width:100%;font-size:15px}
+.btn:disabled{opacity:.5}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line-strong)}
+.switch{margin-top:18px;color:var(--muted);font-size:14px;text-align:center}
+.switch button{color:var(--ink);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.err{color:var(--bad);font-size:14px;min-height:21px;margin-top:10px}
+
+/* ===== Header / tabs ===== */
+header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;max-width:1040px;margin:0 auto;border-bottom:1px solid var(--line)}
+.brand{font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:.01em;text-transform:uppercase}
+.who{color:var(--muted);font-size:14px}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;justify-content:center;gap:0;
+  background:rgba(18,20,22,.96);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border-top:1px solid var(--line);padding:0 0 env(safe-area-inset-bottom,0px)}
+nav.tabs button{flex:1;max-width:180px;display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 4px 9px;color:var(--muted);font-size:11px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;border-top:2px solid transparent}
+nav.tabs button .i{width:19px;height:19px}
+nav.tabs button .i svg{width:100%;height:100%;display:block}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-top-color:var(--accent)}
+@media (min-width:860px){
+  body{padding-bottom:0}
+  nav.tabs{position:sticky;top:0;bottom:auto;border-top:0;border-bottom:1px solid var(--line);padding:0;justify-content:flex-start;max-width:1040px;margin:0 auto}
+  nav.tabs button{flex:none;flex-direction:row;gap:8px;font-size:13px;padding:14px 18px;border-top:0;border-bottom:2px solid transparent}
+  nav.tabs button[aria-selected="true"]{border-bottom-color:var(--accent)}
+  nav.tabs button .i{width:16px;height:16px}
+}
+
+/* ===== Today ===== */
+.hero{display:grid;grid-template-columns:1fr auto;align-items:end;gap:18px;margin:4px 0 20px;padding-bottom:20px;border-bottom:1px solid var(--line)}
+.daynum{font-family:var(--display);font-weight:700;line-height:.82;letter-spacing:-.01em;font-size:clamp(76px,20vw,140px);color:var(--ink)}
+.daynum small{font-size:.26em;letter-spacing:0;color:var(--muted);margin-left:6px;font-weight:600}
+.datebar{display:flex;align-items:center;gap:10px;margin-top:8px;color:var(--muted)}
+.datebar button{width:30px;height:30px;border:1px solid var(--line);border-radius:var(--r-sm);font-size:16px;line-height:1;color:var(--ink)}
+.datebar button:disabled{opacity:.3}
+.datebar .d{min-width:140px;font-weight:500;color:var(--ink);font-size:14px}
+.ring{width:104px;height:104px;position:relative;flex-shrink:0}
+.ring svg{transform:rotate(-90deg)}
+.ring .v{position:absolute;inset:0;display:grid;place-items:center;text-align:center;font-family:var(--display);font-weight:700;font-size:24px;line-height:1;color:var(--ink)}
+.ring .v span{display:block;font-family:var(--body);font-size:11px;font-weight:500;color:var(--muted);margin-top:5px;letter-spacing:.02em}
+.alert{border-radius:var(--r-md);padding:12px 14px;margin-bottom:16px;font-weight:500;font-size:14px;border-left:3px solid var(--line-strong);background:var(--surface)}
+.alert.warn{border-left-color:var(--warn);color:#E4C39D}
+.alert.bad{border-left-color:var(--bad);color:#E7B4A8}
+.alert.good{border-left-color:var(--good);color:#BFD4BE}
+
+.grid2{display:grid;gap:16px}
+@media (min-width:860px){.grid2{grid-template-columns:1.25fr 1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:18px}
+.panel h2{font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:12px;color:var(--muted)}
+.panel .hint{color:var(--muted);font-size:13px;margin:-6px 0 12px}
+
+.tasks{list-style:none;display:grid}
+.task{display:flex;align-items:center;gap:13px;padding:13px 4px;background:none;border:0;border-bottom:1px solid var(--line);width:100%;text-align:left}
+.tasks li:last-child .task{border-bottom:0}
+.task .e{font-size:12px;font-weight:600;letter-spacing:.02em;width:26px;text-align:center;flex-shrink:0;color:var(--muted);text-transform:uppercase}
+.task .t{flex:1;min-width:0}
+.task .t b{display:block;font-weight:500}
+.task .t small{display:block;color:var(--muted);font-size:12px;margin-top:1px}
+.task .c{width:19px;height:19px;border-radius:var(--r-sm);border:1.5px solid var(--line-strong);display:grid;place-items:center;flex-shrink:0;font-weight:700;color:var(--deep);font-size:12px}
+.task[aria-pressed="true"] .c{background:var(--ink);border-color:var(--ink)}
+.task[aria-pressed="true"] .t b{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--line-strong)}
+.task.pop .c{animation:pop .22s ease-out}
+@keyframes pop{0%{transform:scale(.7)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.task.pop .c{animation:none}}
+
+textarea.journal{width:100%;min-height:140px;resize:vertical;background:transparent;border:1px solid var(--line);border-radius:var(--r-md);padding:12px 13px;line-height:1.6;font-size:15px}
+textarea.journal:focus{outline:none;border-color:var(--accent)}
+.saved{font-size:12px;color:var(--muted);margin-top:7px;min-height:18px}
+
+/* ===== Dashboard ===== */
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;margin-bottom:18px;background:var(--line);border:1px solid var(--line)}
+@media (min-width:860px){.stats{grid-template-columns:repeat(4,1fr)}}
+.stat{background:var(--bg);padding:16px}
+.stat .n{font-family:var(--display);font-weight:700;font-size:clamp(26px,6vw,36px);line-height:1;color:var(--ink)}
+.stat .l{color:var(--muted);font-size:12px;margin-top:7px;text-transform:uppercase;letter-spacing:.03em}
+.stat.hot .n{color:var(--accent)}
+.bars{display:grid;gap:13px}
+.bar .row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px}
+.bar .row span:first-child{text-transform:uppercase;letter-spacing:.02em;color:var(--muted);font-size:12px;font-weight:600}
+.bar .row span:last-child{color:var(--ink);font-variant-numeric:tabular-nums;font-weight:600}
+.bar .track{height:3px;background:var(--surface2);overflow:hidden}
+.bar .fill{height:100%;background:var(--accent)}
+.bar.low .fill{background:var(--warn)}
+.heat{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.heat .h{aspect-ratio:1;border-radius:var(--r-sm);background:var(--surface2);display:grid;place-items:center;font-size:10px;color:var(--muted);border:1px solid transparent}
+.heat .h.l1{background:#2C3A44}.heat .h.l2{background:#3D5568;color:var(--ink)}.heat .h.l3{background:#4F7891;color:var(--ink)}.heat .h.l4{background:var(--accent);color:var(--deep);font-weight:700}
+.heat .h.miss{border-color:var(--warn)}
+.heat .h.today{outline:1.5px solid var(--ink);outline-offset:1px}
+.heat .h.future{opacity:.3}
+.heat .wd{font-size:10px;color:var(--muted);text-align:center;text-transform:uppercase}
+.legend{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);margin-top:12px;flex-wrap:wrap;text-transform:uppercase;letter-spacing:.02em}
+.legend i{width:11px;height:11px;border-radius:2px;display:inline-block}
+
+/* ===== History ===== */
+.hist{display:grid}
+.hrow{display:flex;align-items:center;gap:14px;padding:13px 4px;background:none;border:0;border-bottom:1px solid var(--line);width:100%;text-align:left}
+.hist .hrow:last-child{border-bottom:0}
+.hrow .dn{font-family:var(--display);font-weight:700;font-size:19px;width:44px;flex-shrink:0;color:var(--ink)}
+.hrow .dn small{display:block;font-family:var(--body);font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.03em}
+.hrow .mid{flex:1;min-width:0}
+.hrow .mid b{display:block;font-weight:500}
+.hrow .mid .em{font-size:12px;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted);text-transform:uppercase;margin-top:1px}
+.hrow .mid .note{color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-style:italic}
+.pill{font-weight:700;font-size:13px;padding:4px 9px;border-radius:var(--r-sm);background:var(--surface2);font-variant-numeric:tabular-nums;flex-shrink:0;color:var(--muted)}
+.pill.win{background:transparent;border:1px solid var(--good);color:var(--good)}
+.pill.miss{background:transparent;border:1px solid var(--warn);color:var(--warn)}
+.filters{display:flex;gap:0;margin-bottom:16px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.chip{padding:9px 4px;margin-right:20px;background:none;border:0;border-bottom:2px solid transparent;font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.02em}
+.chip[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.empty{color:var(--muted);text-align:center;padding:40px 10px;font-size:14px}
+
+/* ===== Settings ===== */
+.set{max-width:480px}
+.set .field input{background:transparent}
+.rules{list-style:none;display:grid;gap:10px;color:var(--muted);font-size:14px;line-height:1.5}
+.rules li{padding-left:14px;border-left:1px solid var(--line-strong)}
+.page-title{font-family:var(--display);font-weight:700;font-size:clamp(28px,7vw,38px);letter-spacing:0;line-height:1;margin:4px 0 20px;text-transform:uppercase}
+
+.toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--deep);padding:10px 16px;border-radius:var(--r-sm);font-weight:600;font-size:13px;z-index:40}
+@media (min-width:860px){.toast{bottom:24px}}
+.avatar{width:36px;height:36px;border-radius:var(--r-sm);background:var(--surface2);display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:15px;flex-shrink:0;text-transform:uppercase;color:var(--ink)}
+.search{width:100%;background:transparent;border:1px solid var(--line);border-radius:var(--r-md);padding:12px 13px;margin-bottom:16px}
+.search:focus{outline:none;border-color:var(--accent)}
+.loading{min-height:100vh;display:grid;place-items:center;color:var(--muted);font-size:14px}
+/* ===== Admin ===== */
+.adm-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;max-width:1040px;margin:0 auto;border-bottom:1px solid var(--line)}
+.adm-top .right{display:flex;align-items:center;gap:14px}
+.linkbtn{color:var(--ink);font-weight:600;font-size:13px;text-decoration:underline;text-underline-offset:3px}
+.back{color:var(--muted);font-weight:600;margin-bottom:14px;display:inline-block;font-size:13px}
+.meta{color:var(--muted);margin:-10px 0 18px;font-size:14px}
+.goals{display:grid;gap:1px;background:var(--line);border:1px solid var(--line)}
+.goal{display:grid;grid-template-columns:52px 1fr 36px;gap:8px;align-items:start;padding:10px;background:var(--bg)}
+.goal input{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:9px 10px;font-size:14px}
+.goal input:focus{outline:none;border-color:var(--accent)}
+.goal .ge{text-align:center;font-size:13px;padding:9px 4px;text-transform:uppercase}
+.goal .gs{margin-top:6px;font-size:13px}
+.goal .del{width:36px;height:36px;border-radius:var(--r-sm);background:var(--surface);color:var(--bad);font-weight:700;border:1px solid var(--line)}
+.row-btns{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.row-btns .btn{flex:1;min-width:130px}
+.dirty{color:var(--warn);font-size:13px;font-weight:600;min-height:19px;margin-top:8px}
+div.hrow{cursor:default}
+div.hrow:hover{border-color:var(--line)}
+</style>
+</head>
+<body>
+
+<div id="loading" class="loading">Loading…</div>
+
+<!-- ===== AUTH ===== -->
+<section id="auth" class="auth hidden">
+  <form class="auth-card" id="authForm" novalidate>
+    <h1>Winter<br>Arc</h1>
+    <p class="sub" id="authSub">Log in to track your arc.</p>
+    <label class="field"><span>Username</span>
+      <input id="u" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
+    <label class="field"><span>Password</span>
+      <input id="p" type="password" autocomplete="current-password" required minlength="6"></label>
+    <button class="btn" id="authBtn" type="submit">Log in</button>
+    <div class="err" id="authErr" role="alert"></div>
+    <div class="switch"><span id="switchTxt">No account?</span> <button type="button" id="switchBtn">Create one</button></div>
+  </form>
+</section>
+
+<!-- ===== USER APP ===== -->
+<section id="app" class="hidden">
+  <header class="top">
+    <div class="brand">Winter Arc</div>
+    <div class="who" id="who"></div>
+  </header>
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="today" aria-selected="true"><span class="i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="16" height="16" rx="1"/><path d="M8 12l2.5 2.5L16 9"/></svg></span>Today</button>
+    <button role="tab" data-tab="dash" aria-selected="false"><span class="i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 19V10M12 19V5M19 19v-6"/></svg></span>Dashboard</button>
+    <button role="tab" data-tab="history" aria-selected="false"><span class="i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 4h14v16l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M8.5 9h7M8.5 12.5h7"/></svg></span>History</button>
+    <button role="tab" data-tab="settings" aria-selected="false"><span class="i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M12 4v2M12 18v2M4 12h2M18 12h2M6.3 6.3l1.4 1.4M16.3 16.3l1.4 1.4M17.7 6.3l-1.4 1.4M7.7 16.3l-1.4 1.4"/></svg></span>Settings</button>
+  </nav>
+
+  <main class="wrap">
+    <!-- TODAY -->
+    <div id="tab-today" role="tabpanel">
+      <div class="hero">
+        <div>
+          <div class="daynum" id="dayNum">1<small>/90</small></div>
+          <div class="datebar">
+            <button id="prevDay" aria-label="Previous day">‹</button>
+            <span class="d" id="dateLbl"></span>
+            <button id="nextDay" aria-label="Next day">›</button>
+          </div>
+        </div>
+        <div class="ring" id="ring"></div>
+      </div>
+      <div id="alertBox"></div>
+      <div class="grid2">
+        <div class="panel">
+          <h2>Daily checklist</h2>
+          <ul class="tasks" id="taskList"></ul>
+        </div>
+        <div style="display:grid;gap:18px;align-content:start">
+          <div class="panel">
+            <h2>Weekly reset</h2>
+            <p class="hint" id="weekHint"></p>
+            <ul class="tasks" id="weekList"></ul>
+          </div>
+          <div class="panel">
+            <h2>Notes</h2>
+            <p class="hint">Plan tomorrow, note wins, note what broke.</p>
+            <textarea class="journal" id="note" placeholder="Today I…"></textarea>
+            <div class="saved" id="savedLbl"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="tab-dash" role="tabpanel" class="hidden">
+      <h1 class="page-title">Dashboard</h1>
+      <div class="stats" id="stats"></div>
+      <div class="grid2">
+        <div class="panel">
+          <h2>Habit hit rate</h2>
+          <p class="hint">Share of arc days each habit was done.</p>
+          <div class="bars" id="bars"></div>
+        </div>
+        <div class="panel">
+          <h2>Last 5 weeks</h2>
+          <div class="heat" id="heat"></div>
+          <div class="legend">
+            <span>Less</span><i style="background:var(--surface2)"></i><i style="background:#1F4466"></i><i style="background:#2C6590"></i><i style="background:#4A9CC8"></i><i style="background:#9EE0F7"></i><span>More</span>
+            <span style="margin-left:10px"><i style="border:1px solid var(--warn);vertical-align:-2px"></i> Missed</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div id="tab-history" role="tabpanel" class="hidden">
+      <h1 class="page-title">History</h1>
+      <div class="filters" id="filters">
+        <button class="chip" data-f="all" aria-pressed="true">All</button>
+        <button class="chip" data-f="win" aria-pressed="false">Won</button>
+        <button class="chip" data-f="miss" aria-pressed="false">Missed</button>
+        <button class="chip" data-f="notes" aria-pressed="false">With notes</button>
+      </div>
+      <div class="hist" id="hist"></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="tab-settings" role="tabpanel" class="hidden">
+      <h1 class="page-title">Settings</h1>
+      <div class="set">
+        <div class="panel" style="margin-bottom:18px">
+          <h2>Your arc</h2>
+          <label class="field"><span>Start date</span><input type="date" id="sStart"></label>
+          <label class="field"><span>Length (days)</span><input type="number" id="sLen" min="7" max="365"></label>
+          <label class="field"><span>Win a day at (% of checklist)</span><input type="number" id="sThr" min="50" max="100" step="5"></label>
+          <button class="btn" id="saveSettings">Save settings</button>
+        </div>
+        <div class="panel" style="margin-bottom:18px">
+          <h2>Rules</h2>
+          <ul class="rules">
+            <li>A day is won when you hit your win % of the daily checklist.</li>
+            <li>Never miss twice: one missed day is a slip, two in a row breaks the arc.</li>
+            <li>Weekly reset counts once per week (Mon–Sun).</li>
+            <li>Your coach sets your daily goals.</li>
+          </ul>
+        </div>
+        <button class="btn ghost" id="logout">Log out</button>
+      </div>
+    </div>
+  </main>
+</section>
+
+<!-- ===== ADMIN APP ===== -->
+<section id="adminApp" class="hidden">
+  <header class="adm-top">
+    <div class="brand">Winter Arc — Admin</div>
+    <div class="right"><span class="who">admin</span><button class="linkbtn" id="aLogout">Log out</button></div>
+  </header>
+  <main class="wrap">
+    <div id="aListView">
+      <h1 class="page-title">Users</h1>
+      <div class="stats" id="aStats"></div>
+      <input class="search" id="aSearch" placeholder="Search users" autocapitalize="none">
+      <div class="hist" id="aList"></div>
+    </div>
+
+    <div id="aUserView" class="hidden">
+      <button class="back" id="aBack">‹ All users</button>
+      <h1 class="page-title" id="aName"></h1>
+      <p class="meta" id="aMeta"></p>
+      <div class="stats" id="aUStats"></div>
+      <div class="grid2" style="margin-bottom:18px">
+        <div class="panel">
+          <h2>Daily goals</h2>
+          <p class="hint">What this user checks off every day. Weekly reset is always included.</p>
+          <div class="goals" id="aGoals"></div>
+          <div class="dirty" id="aDirty"></div>
+          <div class="row-btns">
+            <button class="btn ghost" id="aAdd">Add goal</button>
+            <button class="btn" id="aSave">Save goals</button>
+          </div>
+          <div class="row-btns"><button class="linkbtn" id="aReset">Reset to default goals</button></div>
+        </div>
+        <div class="panel">
+          <h2>Habit hit rate</h2>
+          <p class="hint">Share of arc days each goal was done.</p>
+          <div class="bars" id="aBars"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>History</h2>
+        <div class="hist" id="aHist"></div>
+      </div>
+    </div>
+  </main>
+</section>
+
+<div id="toast" class="toast hidden" role="status"></div>
+
+<script>
+/* ================= CONFIG ================= */
+const API_URL = "https://script.google.com/macros/s/AKfycbxJZkjNGhceK0wbE_jjeO4f-bxUawj9In8GX4Nxrdbq-eTt1KGQsmkAdeKyE7vooCy_/exec"; // ends with /exec
+
+const WEEKLY = {id:"review", e:"WK", t:"Weekly reset/review"};
+
+/* ================= STATE ================= */
+let TASKS = [];  // this user's daily goals (set by admin)
+let user = null, settings = {}, days = {}, viewDate = todayISO(), histFilter = "all", noteTimer = null;
+const A = {users:[], days:{}, defaults:[], sel:null, draft:[], dirty:false};
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* ================= DATES ================= */
+function iso(d){ return new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,10); }
+function todayISO(){ return iso(new Date()); }
+function parse(s){ return new Date(s+"T00:00:00"); }
+function addDays(s,n){ const d=parse(s); d.setDate(d.getDate()+n); return iso(d); }
+function diff(a,b){ return Math.round((parse(a)-parse(b))/86400000); }
+function fmt(s,o={weekday:"short",month:"short",day:"numeric"}){ return parse(s).toLocaleDateString(undefined,o); }
+function weekStart(s){ const d=parse(s); const wd=(d.getDay()+6)%7; d.setDate(d.getDate()-wd); return iso(d); }
+
+/* ================= LOGIC ================= */
+function dayIndex(s){ return diff(s, settings.start) + 1; }
+function doneCount(s){ const t = days[s]?.tasks || {}; return TASKS.filter(x=>t[x.id]).length; }
+function score(s){ return TASKS.length ? doneCount(s) / TASKS.length : 0; }
+function won(s){ return TASKS.length > 0 && score(s)*100 >= settings.threshold; }
+function arcDaysUntil(end){
+  const out=[]; const last = addDays(settings.start, settings.length-1);
+  for(let d=settings.start; d<=end && d<=last; d=addDays(d,1)) out.push(d);
+  return out;
+}
+function weekReviewed(s){
+  const ws = weekStart(s);
+  for(let i=0;i<7;i++){ if(days[addDays(ws,i)]?.tasks?.review) return true; }
+  return false;
+}
+function streaks(){
+  const today = todayISO(), list = arcDaysUntil(today);
+  let best=0, run=0;
+  list.forEach(d=>{ if(won(d)){run++;best=Math.max(best,run);} else run=0; });
+  let cur=0, d = won(today) ? today : addDays(today,-1);
+  while(d >= settings.start && won(d)){ cur++; d=addDays(d,-1); }
+  return {cur,best};
+}
+function doubleMisses(){
+  const past = arcDaysUntil(addDays(todayISO(),-1));
+  let n=0; for(let i=1;i<past.length;i++){ if(!won(past[i]) && !won(past[i-1])) n++; }
+  return n;
+}
+function loadSettings(m){
+  m = m || {};
+  settings = { start: m.start || todayISO(), length: Number(m.length) || 90, threshold: Number(m.threshold) || 80 };
+}
+
+/* ================= API ================= */
+async function api(action, payload={}){
+  try{
+    const res = await fetch(API_URL, {method:"POST", body:JSON.stringify({action, token:user?.token, ...payload})});
+    const j = await res.json();
+    if(j.error === "auth"){ logout(); return {error:"Session expired. Log in again."}; }
+    return j;
+  }catch(e){ return {error:"Can't reach the server. Check your connection."}; }
+}
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.remove("hidden"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.add("hidden"),2600); }
+function stat(v,l,hot){ return `<div class="stat${hot?" hot":""}"><div class="n">${v}</div><div class="l">${l}</div></div>`; }
+function barsHTML(list){
+  if(!TASKS.length) return `<div class="empty">No goals yet.</div>`;
+  return TASKS.map(x=>{
+    const n = list.filter(d=>days[d]?.tasks?.[x.id]).length, p = list.length ? Math.round(n/list.length*100) : 0;
+    return `<div class="bar${p<50&&list.length?" low":""}"><div class="row"><span>${esc(x.e)} ${esc(x.t)}</span><span>${p}%</span></div>
+      <div class="track"><div class="fill" style="width:${p}%"></div></div></div>`;
+  }).join("");
+}
+
+/* ================= USER: DATA ================= */
+async function loadUser(){
+  const j = await api("load");
+  if(j.error){ toast("Couldn't load your arc: "+j.error); return false; }
+  TASKS = j.goals || []; user.settings = j.settings; loadSettings(j.settings);
+  days = {}; (j.days||[]).forEach(r=>days[r.day]={tasks:r.tasks||{}, note:r.note||""});
+  return true;
+}
+async function saveDay(s){
+  const row = days[s] || {tasks:{},note:""};
+  const j = await api("save", {day:s, tasks:row.tasks, note:row.note});
+  if(j.error) toast("Not saved: "+j.error);
+  return !j.error;
+}
+
+/* ================= USER: TODAY ================= */
+function renderToday(){
+  const s = viewDate, t = days[s]?.tasks || {};
+  const idx = dayIndex(s);
+  $("dayNum").innerHTML = (idx<1 ? "–" : idx) + `<small>/${settings.length}</small>`;
+  $("dateLbl").textContent = s===todayISO() ? "Today, "+fmt(s,{month:"short",day:"numeric"}) : fmt(s);
+  $("nextDay").disabled = s >= todayISO();
+  $("prevDay").disabled = s <= settings.start;
+
+  const pct = Math.round(score(s)*100), R=44, C=2*Math.PI*R, col = pct>=settings.threshold ? "var(--good)" : "var(--accent)";
+  $("ring").innerHTML = `<svg width="104" height="104" viewBox="0 0 104 104">
+    <circle cx="52" cy="52" r="${R}" fill="none" stroke="var(--surface2)" stroke-width="3"/>
+    <circle cx="52" cy="52" r="${R}" fill="none" stroke="${col}" stroke-width="3" stroke-linecap="butt"
+      stroke-dasharray="${C}" stroke-dashoffset="${C*(1-pct/100)}" style="transition:stroke-dashoffset .4s"/></svg>
+    <div class="v"><div>${pct}%<span>${doneCount(s)}/${TASKS.length} done</span></div></div>`;
+
+  let a = "";
+  const y = addDays(s,-1), y2 = addDays(s,-2);
+  if(idx>2 && !won(y) && !won(y2)) a = `<div class="alert bad">Missed ${fmt(y2,{weekday:"short"})} and ${fmt(y,{weekday:"short"})}. That's two in a row, so the streak resets today.</div>`;
+  else if(idx>1 && !won(y)) a = `<div class="alert warn">You missed yesterday. Miss today too and the streak breaks.</div>`;
+  else if(pct>=settings.threshold) a = `<div class="alert good">Day won. Streak holds.</div>`;
+  if(idx<1) a = `<div class="alert warn">Your arc starts ${fmt(settings.start)}. Change it in Settings.</div>`;
+  if(idx>settings.length) a = `<div class="alert good">Arc complete. Start a new one in Settings.</div>`;
+  $("alertBox").innerHTML = a;
+
+  $("taskList").innerHTML = TASKS.length ? TASKS.map(x=>taskHTML(x, !!t[x.id])).join("")
+    : `<li class="empty">No goals set yet. Your coach will add them.</li>`;
+  const wr = weekReviewed(s);
+  $("weekHint").textContent = wr ? "Done for this week." : "Once per week, Mon–Sun.";
+  $("weekList").innerHTML = taskHTML(WEEKLY, !!t.review, wr && !t.review ? "Done earlier this week" : "");
+
+  const n = $("note"); if(document.activeElement!==n) n.value = days[s]?.note || "";
+}
+function taskHTML(x, on, subOverride){
+  const sub = subOverride || x.sub || "";
+  return `<li><button class="task" data-id="${esc(x.id)}" aria-pressed="${on}">
+    <span class="e">${esc(x.e)}</span><span class="t"><b>${esc(x.t)}</b>${sub?`<small>${esc(sub)}</small>`:""}</span>
+    <span class="c">${on?"✓":""}</span></button></li>`;
+}
+async function toggle(id){
+  const s = viewDate;
+  days[s] = days[s] || {tasks:{},note:""};
+  days[s].tasks = {...days[s].tasks, [id]: !days[s].tasks[id]};
+  renderToday();
+  const b = document.querySelector(`.task[data-id="${CSS.escape(id)}"]`); if(b) b.classList.add("pop");
+  if(!(await saveDay(s))){ days[s].tasks[id] = !days[s].tasks[id]; renderToday(); }
+}
+
+/* ================= USER: DASHBOARD ================= */
+function renderDash(){
+  const today = todayISO(), list = arcDaysUntil(today);
+  const {cur,best} = streaks();
+  const avg = list.length ? Math.round(list.reduce((a,d)=>a+score(d),0)/list.length*100) : 0;
+  const last7 = list.slice(-7), avg7 = last7.length ? Math.round(last7.reduce((a,d)=>a+score(d),0)/last7.length*100) : 0;
+  const weeks = new Set(list.map(weekStart)); const reviewed = [...weeks].filter(w=>weekReviewed(w)).length;
+  const idx = Math.min(Math.max(dayIndex(today),0), settings.length);
+  $("stats").innerHTML =
+    stat(`${idx}<span style="font-size:.5em;color:var(--muted)">/${settings.length}</span>`, "Arc day") +
+    stat(cur, "Current streak", true) + stat(best, "Best streak") +
+    stat(`${list.filter(won).length}/${list.length}`, "Days won") +
+    stat(`${avg7}%`, "Last 7 days avg") + stat(`${avg}%`, "Arc avg") +
+    stat(`${reviewed}/${weeks.size}`, "Weekly resets") + stat(doubleMisses(), "Double misses");
+  $("bars").innerHTML = barsHTML(list);
+
+  const ws = weekStart(today), from = addDays(ws,-28);
+  let h = ["M","T","W","T","F","S","S"].map(w=>`<div class="wd">${w}</div>`).join("");
+  for(let i=0;i<35;i++){
+    const d = addDays(from,i), inArc = d>=settings.start && dayIndex(d)<=settings.length;
+    const p = score(d), lvl = p===0?"":p<.4?"l1":p<.7?"l2":p<1?"l3":"l4";
+    const cls = ["h", inArc?lvl:"", d>today?"future":"", d===today?"today":"", inArc&&d<today&&!won(d)?"miss":""].join(" ");
+    h += `<button class="${cls}" data-go="${d}" title="${fmt(d)} · ${Math.round(p*100)}%" ${d>today||d<settings.start?"disabled":""}>${parse(d).getDate()}</button>`;
+  }
+  $("heat").innerHTML = h;
+}
+
+/* ================= HISTORY (shared) ================= */
+function historyHTML(list, clickable){
+  if(!list.length) return `<div class="empty">No days yet.</div>`;
+  const tag = clickable ? "button" : "div";
+  return list.map(d=>{
+    const t = days[d]?.tasks||{}, p = Math.round(score(d)*100), w = won(d), isToday = d===todayISO();
+    const em = TASKS.filter(x=>t[x.id]).map(x=>esc(x.e)).concat(t.review?["WK"]:[]).join(" · ");
+    const note = (days[d]?.note||"").trim();
+    return `<${tag} class="hrow" data-go="${d}">
+      <div class="dn">${dayIndex(d)}<small>DAY</small></div>
+      <div class="mid"><b>${fmt(d)}${isToday?" · today":""}</b>
+        <div class="em">${em || "<span style='color:var(--muted);letter-spacing:0;text-transform:none;font-size:13px'>Nothing checked</span>"}</div>
+        ${note?`<div class="note">${esc(note)}</div>`:""}</div>
+      <span class="pill ${w?"win":isToday?"":"miss"}">${p}%</span></${tag}>`;
+  }).join("");
+}
+function renderHistory(){
+  const list = arcDaysUntil(todayISO()).reverse().filter(d=>{
+    if(histFilter==="win") return won(d);
+    if(histFilter==="miss") return !won(d) && d<todayISO();
+    if(histFilter==="notes") return (days[d]?.note||"").trim();
+    return true;
+  });
+  $("hist").innerHTML = list.length ? historyHTML(list, true) : `<div class="empty">Nothing here yet. Check off today's list to start your history.</div>`;
+}
+
+/* ================= USER: SETTINGS ================= */
+function renderSettings(){
+  $("sStart").value = settings.start; $("sLen").value = settings.length; $("sThr").value = settings.threshold;
+}
+
+/* ================= USER: NAV ================= */
+let tab = "today";
+function show(name){
+  tab = name;
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===name));
+  ["today","dash","history","settings"].forEach(n=>$("tab-"+n).classList.toggle("hidden", n!==name));
+  ({today:renderToday, dash:renderDash, history:renderHistory, settings:renderSettings})[name]();
+  window.scrollTo({top:0});
+}
+function goDay(d){ viewDate = d; show("today"); }
+
+/* ================= ADMIN ================= */
+async function loadAdmin(){
+  const j = await api("adminLoad");
+  if(j.error){ toast("Couldn't load users: "+j.error); return false; }
+  A.users = j.users || []; A.defaults = j.defaults || [];
+  const map = {}; A.users.forEach(u=>map[u.username]={});
+  (j.days||[]).forEach(r=>{ (map[r.username] ||= {})[r.day] = {tasks:r.tasks||{}, note:r.note||""}; });
+  A.days = map;
+  return true;
+}
+function withUser(u, fn){
+  const t0 = TASKS, s0 = settings, d0 = days;
+  TASKS = u.goals || []; loadSettings(u.settings); days = A.days[u.username] || {};
+  try{ return fn(); } finally { TASKS = t0; settings = s0; days = d0; }
+}
+function userSummary(u){
+  return withUser(u, ()=>{
+    const today = todayISO(), list = arcDaysUntil(today), last7 = list.slice(-7);
+    const touched = Object.keys(days).filter(d=>Object.values(days[d].tasks||{}).some(Boolean) || (days[d].note||"").trim()).sort();
+    return {
+      idx: Math.min(Math.max(dayIndex(today),0), settings.length), len: settings.length,
+      streak: streaks().cur, best: streaks().best, todayPct: Math.round(score(today)*100),
+      avg7: last7.length ? Math.round(last7.reduce((a,d)=>a+score(d),0)/last7.length*100) : 0,
+      avg: list.length ? Math.round(list.reduce((a,d)=>a+score(d),0)/list.length*100) : 0,
+      won: list.filter(won).length, total: list.length, dm: doubleMisses(),
+      yMiss: dayIndex(today)>1 && !won(addDays(today,-1)), thr: settings.threshold,
+      last: touched[touched.length-1] || null, goals: TASKS.length,
+    };
+  });
+}
+function renderAdminList(){
+  const q = $("aSearch").value.trim().toLowerCase();
+  const rows = A.users.map(u=>({u, s:userSummary(u)}));
+  const n = rows.length, active = rows.filter(r=>r.s.todayPct>0).length;
+  const avgT = n ? Math.round(rows.reduce((a,r)=>a+r.s.todayPct,0)/n) : 0;
+  const avg7 = n ? Math.round(rows.reduce((a,r)=>a+r.s.avg7,0)/n) : 0;
+  $("aStats").innerHTML = stat(n,"Users") + stat(`${active}/${n}`,"Active today",true) + stat(`${avgT}%`,"Avg today") + stat(`${avg7}%`,"Avg last 7 days");
+  const list = rows.filter(r=>r.u.username.includes(q)).sort((a,b)=>b.s.streak-a.s.streak || a.u.username.localeCompare(b.u.username));
+  $("aList").innerHTML = list.length ? list.map(({u,s})=>`<button class="hrow" data-user="${esc(u.username)}">
+    <div class="avatar">${esc(u.username[0])}</div>
+    <div class="mid"><b>@${esc(u.username)}</b>
+      <div class="note">Day ${s.idx}/${s.len} · streak ${s.streak} · won ${s.won}/${s.total} · 7d ${s.avg7}% · ${s.goals} goals${s.last?" · last "+fmt(s.last,{month:"short",day:"numeric"}):" · no activity"}${s.yMiss?" · missed yesterday":""}</div></div>
+    <span class="pill ${s.todayPct>=s.thr?"win":""}">${s.todayPct}%</span></button>`).join("")
+    : `<div class="empty">${n ? "No users match." : "No users yet. Share the site link so people can sign up."}</div>`;
+}
+function openUser(name){
+  const u = A.users.find(x=>x.username===name); if(!u) return;
+  A.sel = name; A.draft = JSON.parse(JSON.stringify(u.goals || [])); A.dirty = false;
+  $("aListView").classList.add("hidden"); $("aUserView").classList.remove("hidden");
+  renderAdminUser(); window.scrollTo({top:0});
+}
+function closeUser(){
+  if(A.dirty && !confirm("Discard unsaved goal changes?")) return;
+  A.sel = null; $("aUserView").classList.add("hidden"); $("aListView").classList.remove("hidden");
+  renderAdminList();
+}
+function renderAdminUser(){
+  const u = A.users.find(x=>x.username===A.sel); if(!u) return closeUser();
+  const s = userSummary(u);
+  $("aName").textContent = "@" + u.username;
+  $("aMeta").textContent = `Started ${fmt(u.settings?.start || todayISO())} · ${s.len}-day arc · wins at ${s.thr}%`;
+  $("aUStats").innerHTML =
+    stat(`${s.idx}<span style="font-size:.5em;color:var(--muted)">/${s.len}</span>`, "Arc day") +
+    stat(s.streak, "Current streak", true) + stat(s.best, "Best streak") +
+    stat(`${s.won}/${s.total}`, "Days won") + stat(`${s.todayPct}%`, "Today") +
+    stat(`${s.avg7}%`, "Last 7 days avg") + stat(`${s.avg}%`, "Arc avg") + stat(s.dm, "Double misses");
+  withUser(u, ()=>{
+    $("aBars").innerHTML = barsHTML(arcDaysUntil(todayISO()));
+    $("aHist").innerHTML = historyHTML(arcDaysUntil(todayISO()).reverse(), false);
+  });
+  renderGoals();
+}
+function renderGoals(){
+  $("aGoals").innerHTML = A.draft.length ? A.draft.map((g,i)=>`<div class="goal" data-i="${i}">
+    <input class="ge" data-k="e" value="${esc(g.e)}" maxlength="4" aria-label="Tag" placeholder="TAG">
+    <div><input class="gt" data-k="t" value="${esc(g.t)}" placeholder="Goal, e.g. Drink 3 L of water" maxlength="80">
+      <input class="gs" data-k="sub" value="${esc(g.sub||"")}" placeholder="Details (optional)" maxlength="80"></div>
+    <button class="del" data-del="${i}" aria-label="Remove goal">✕</button></div>`).join("")
+    : `<div class="empty">No goals. Add one below.</div>`;
+  $("aDirty").textContent = A.dirty ? "Unsaved changes" : "";
+}
+function markDirty(){ A.dirty = true; $("aDirty").textContent = "Unsaved changes"; }
+async function saveGoals(){
+  const goals = A.draft.map(g=>({id:g.id, e:(g.e||"—").trim()||"—", t:(g.t||"").trim(), sub:(g.sub||"").trim()})).filter(g=>g.t);
+  $("aSave").disabled = true;
+  const j = await api("adminGoals", {username:A.sel, goals});
+  $("aSave").disabled = false;
+  if(j.error) return toast("Not saved: "+j.error);
+  const u = A.users.find(x=>x.username===A.sel); u.goals = j.goals;
+  A.draft = JSON.parse(JSON.stringify(j.goals)); A.dirty = false;
+  renderAdminUser(); toast(`Saved @${A.sel}'s goals`);
+}
+
+/* ================= AUTH ================= */
+let mode = "login";
+function setMode(m){
+  mode = m;
+  $("authBtn").textContent = m==="login" ? "Log in" : "Create account";
+  $("authSub").textContent = m==="login" ? "Log in to track your arc." : "Pick a username and password.";
+  $("switchTxt").textContent = m==="login" ? "No account?" : "Have an account?";
+  $("switchBtn").textContent = m==="login" ? "Create one" : "Log in";
+  $("p").autocomplete = m==="login" ? "current-password" : "new-password";
+  $("authErr").textContent = "";
+}
+$("switchBtn").onclick = ()=>setMode(mode==="login"?"signup":"login");
+$("authForm").onsubmit = async e=>{
+  e.preventDefault();
+  const u = $("u").value.trim().toLowerCase(), p = $("p").value;
+  if(!/^[a-z0-9_.]{3,20}$/.test(u)) return $("authErr").textContent = "Username: 3–20 letters, numbers, _ or .";
+  if(p.length<6) return $("authErr").textContent = "Password must be at least 6 characters.";
+  $("authBtn").disabled = true; $("authErr").textContent = "";
+  const j = await api(mode, {username:u, password:p, today:todayISO()});
+  $("authBtn").disabled = false;
+  if(j.error) return $("authErr").textContent = j.error;
+  user = {token:j.token, username:j.username, role:j.role};
+  try{ localStorage.setItem("wa_session", JSON.stringify(user)); }catch(_){}
+  $("p").value = "";
+  boot();
+};
+function hideAll(){ ["loading","auth","app","adminApp"].forEach(id=>$(id).classList.add("hidden")); }
+function logout(){
+  user = null; TASKS = []; days = {}; A.users = []; A.days = {}; A.sel = null; A.dirty = false;
+  try{ localStorage.removeItem("wa_session"); }catch(_){}
+  hideAll(); $("auth").classList.remove("hidden");
+}
+async function boot(){
+  hideAll();
+  if(!user) return logout();
+  $("loading").classList.remove("hidden");
+  if(user.role === "admin"){
+    const ok = await loadAdmin(); if(!user) return;
+    hideAll(); $("adminApp").classList.remove("hidden");
+    $("aUserView").classList.add("hidden"); $("aListView").classList.remove("hidden");
+    if(ok) renderAdminList();
+    return;
+  }
+  const ok = await loadUser(); if(!user) return;
+  hideAll(); $("app").classList.remove("hidden");
+  $("who").textContent = "@" + user.username;
+  viewDate = todayISO(); show("today");
+  if(!ok) toast("Couldn't load your arc. Pull to refresh.");
+}
+
+/* ================= EVENTS: USER ================= */
+document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>{ if(b.dataset.tab==="today") viewDate=todayISO(); show(b.dataset.tab); });
+$("taskList").onclick = e=>{ const b=e.target.closest(".task"); if(b) toggle(b.dataset.id); };
+$("weekList").onclick = e=>{ const b=e.target.closest(".task"); if(b) toggle(b.dataset.id); };
+$("prevDay").onclick = ()=>{ viewDate=addDays(viewDate,-1); renderToday(); };
+$("nextDay").onclick = ()=>{ viewDate=addDays(viewDate,1); renderToday(); };
+$("heat").onclick = e=>{ const b=e.target.closest("[data-go]"); if(b && !b.disabled) goDay(b.dataset.go); };
+$("hist").onclick = e=>{ const b=e.target.closest("[data-go]"); if(b) goDay(b.dataset.go); };
+$("filters").onclick = e=>{ const b=e.target.closest(".chip"); if(!b) return; histFilter=b.dataset.f;
+  document.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed", c===b)); renderHistory(); };
+$("note").oninput = ()=>{
+  const s = viewDate; days[s] = days[s] || {tasks:{},note:""}; days[s].note = $("note").value;
+  $("savedLbl").textContent = "Saving…"; clearTimeout(noteTimer);
+  noteTimer = setTimeout(async()=>{ $("savedLbl").textContent = (await saveDay(s)) ? "Saved" : "Not saved"; }, 700);
+};
+$("saveSettings").onclick = async ()=>{
+  const next = { start:$("sStart").value || settings.start, length:Math.min(365,Math.max(7,Number($("sLen").value)||90)),
+    threshold:Math.min(100,Math.max(50,Number($("sThr").value)||80)) };
+  const j = await api("settings", {settings:next});
+  if(j.error) return toast("Not saved: "+j.error);
+  user.settings = j.settings; loadSettings(j.settings); renderSettings(); toast("Settings saved");
+};
+$("logout").onclick = logout;
+
+/* ================= EVENTS: ADMIN ================= */
+$("aLogout").onclick = ()=>{ if(!A.dirty || confirm("Discard unsaved goal changes?")) logout(); };
+$("aSearch").oninput = renderAdminList;
+$("aList").onclick = e=>{ const b=e.target.closest("[data-user]"); if(b) openUser(b.dataset.user); };
+$("aBack").onclick = closeUser;
+$("aGoals").oninput = e=>{
+  const row = e.target.closest(".goal"), k = e.target.dataset.k; if(!row || !k) return;
+  A.draft[Number(row.dataset.i)][k] = e.target.value; markDirty();
+};
+$("aGoals").onclick = e=>{
+  const b = e.target.closest("[data-del]"); if(!b) return;
+  A.draft.splice(Number(b.dataset.del),1); A.dirty = true; renderGoals();
+};
+$("aAdd").onclick = ()=>{
+  A.draft.push({id:"g_"+Date.now().toString(36)+Math.random().toString(36).slice(2,5), e:"—", t:"", sub:""});
+  A.dirty = true; renderGoals();
+  const inputs = $("aGoals").querySelectorAll(".gt"); inputs[inputs.length-1]?.focus();
+};
+$("aReset").onclick = ()=>{
+  if(!confirm("Replace this user's goals with the default list?")) return;
+  A.draft = JSON.parse(JSON.stringify(A.defaults)); A.dirty = true; renderGoals();
+};
+$("aSave").onclick = saveGoals;
+
+/* ================= START ================= */
+try{ user = JSON.parse(localStorage.getItem("wa_session")); }catch(_){ user = null; }
+if(user && !user.role) user = null; // old session format
+boot();
+</script>
+</body>
+</html>
